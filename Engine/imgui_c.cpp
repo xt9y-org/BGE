@@ -1,88 +1,96 @@
 #include "imgui_c.h"
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
+#include "imgui_impl_lwcgl.h"
 #include "imgui_impl_opengl3.h"
+#include "state.h"
 
-#include <GLFW/glfw3.h>
 #include <cstdarg>
 #include <cstdio>
-#include <cstring>
-
-static GLFWwindow* g_window = nullptr;
 
 extern "C" {
 
-void imgui_init(GLFWwindow* window)
+bool imgui_init(void)
 {
-    g_window = window;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.IniFilename = "imgui.ini";
 
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding    = 0.0f;
-    style.FrameRounding     = 0.0f;
-    style.GrabRounding      = 0.0f;
-    style.PopupRounding     = 0.0f;
+    style.WindowRounding = 0.0f;
+    style.FrameRounding = 0.0f;
+    style.GrabRounding = 0.0f;
+    style.PopupRounding = 0.0f;
     style.ScrollbarRounding = 0.0f;
-    style.TabRounding       = 0.0f;
-    style.ChildRounding     = 0.0f;
-    style.WindowBorderSize  = 1.0f;
+    style.TabRounding = 0.0f;
+    style.ChildRounding = 0.0f;
+    style.WindowBorderSize = 1.0f;
 
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
+    if (!ImGui_ImplLwcgl_Init()) {
+        ImGui::DestroyContext();
+        return false;
+    }
+    if (!ImGui_ImplOpenGL3_Init("#version 330 core")) {
+        ImGui_ImplLwcgl_Shutdown();
+        ImGui::DestroyContext();
+        return false;
+    }
+    return true;
 }
 
 void imgui_newframe(void)
 {
+    if (!ImGui::GetCurrentContext()) return;
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplLwcgl_NewFrame(
+        state.dt,
+        state.fb ? state.fb->ww : 0,
+        state.fb ? state.fb->wh : 0,
+        state.fb ? state.fb->w : 0,
+        state.fb ? state.fb->h : 0);
     ImGui::NewFrame();
 }
 
 void imgui_render(void)
 {
+    if (!ImGui::GetCurrentContext()) return;
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void imgui_shutdown(void)
 {
+    if (!ImGui::GetCurrentContext()) return;
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplLwcgl_Shutdown();
     ImGui::DestroyContext();
 }
 
 bool imgui_want_capture_mouse(void)
 {
-    return ImGui::GetIO().WantCaptureMouse;
+    return ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse;
 }
 
 bool imgui_want_capture_keyboard(void)
 {
-    return ImGui::GetIO().WantCaptureKeyboard;
+    return ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureKeyboard;
 }
 
 bool imgui_is_any_window_hovered(void)
 {
-    return ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+    return ImGui::GetCurrentContext() && ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 }
 
 void imgui_set_mouse_enabled(bool enabled)
 {
+    if (!ImGui::GetCurrentContext()) return;
     ImGuiIO& io = ImGui::GetIO();
-    if (enabled) {
-        io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-        double mx, my;
-        glfwGetCursorPos(g_window, &mx, &my);
-        io.MousePos = ImVec2((float)mx, (float)my);
-    } else {
-        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
-    }
+    if (enabled) io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+    else io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
 }
 
 bool imgui_begin(const char* title, bool* open, i32 window_flags)
@@ -247,7 +255,7 @@ bool imgui_radio(const char* label, i32* v, i32 v_button)
 
 bool imgui_begin_child(const char* str_id, f32 width, f32 height, bool border)
 {
-    ImGuiChildFlags flags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
+    const ImGuiChildFlags flags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
     return ImGui::BeginChild(str_id, ImVec2(width, height), flags);
 }
 
@@ -258,12 +266,12 @@ void imgui_end_child(void)
 
 void imgui_image(u32 texture_id, f32 width, f32 height)
 {
-    ImGui::Image(ImTextureRef((ImTextureID)texture_id), ImVec2(width, height));
+    ImGui::Image(ImTextureRef((ImTextureID)(uintptr_t)texture_id), ImVec2(width, height));
 }
 
 bool imgui_image_button(const char* str_id, u32 texture_id, f32 width, f32 height)
 {
-    return ImGui::ImageButton(str_id, ImTextureRef((ImTextureID)texture_id), ImVec2(width, height));
+    return ImGui::ImageButton(str_id, ImTextureRef((ImTextureID)(uintptr_t)texture_id), ImVec2(width, height));
 }
 
 bool imgui_is_item_clicked(i32 mouse_button)
@@ -336,4 +344,4 @@ f32 imgui_calc_text_width(const char* text)
     return ImGui::CalcTextSize(text).x;
 }
 
-} // extern "C"
+}
