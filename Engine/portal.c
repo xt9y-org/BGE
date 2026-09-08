@@ -123,7 +123,6 @@ bool portal_build_camera(const level_quad_t* src, const level_quad_t* dst, const
 
     out_cam->pitch = RAD2DEG(asinf(fmaxf(-1.0f, fminf(1.0f, out_cam->front.y))));
     out_cam->yaw = RAD2DEG(atan2f(out_cam->front.z, out_cam->front.x));
-    out_cam->firstMouse = true;
     return true;
 }
 
