@@ -128,7 +128,10 @@ void shoot_bullet(void)
     for (i32 i = 0; i < path_count; i++) g_debug_shots[slot].points[i] = path[i];
     g_debug_shots[slot].point_count = path_count;
     g_debug_shots[slot].normal = final_normal;
-    g_debug_shots[slot].time = (f32)glfwGetTime();
+    const double timer_resolution = (double)Sys.getTimerResolution();
+    g_debug_shots[slot].time = timer_resolution > 0.0
+        ? (f32)((double)Sys.getTime() / timer_resolution)
+        : 0.0f;
     g_debug_shots[slot].r = (f32)(rand() % 256) / 255.0f;
     g_debug_shots[slot].g = (f32)(rand() % 256) / 255.0f;
     g_debug_shots[slot].b = (f32)(rand() % 256) / 255.0f;
@@ -137,7 +140,10 @@ void shoot_bullet(void)
 
 static void render_debug_shots(void)
 {
-    f32 now = (f32)glfwGetTime();
+    const double timer_resolution = (double)Sys.getTimerResolution();
+    const f32 now = timer_resolution > 0.0
+        ? (f32)((double)Sys.getTime() / timer_resolution)
+        : 0.0f;
     f32 verts[MAX_DEBUG_SHOTS * 32 * 8];
     i32 line_verts = 0, tri_verts = 0;
 
@@ -221,7 +227,6 @@ void apply_level_camera(camera_t *cam, level_data_t *level)
     cam->pos = level->cam.pos;
     cam->yaw = level->cam.yaw;
     cam->pitch = level->cam.pitch;
-    cam->firstMouse = true;
     update_camera_vectors(cam);
 }
 
