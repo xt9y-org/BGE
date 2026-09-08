@@ -3,7 +3,9 @@
 #include "state.h"
 #include "render.h"
 #include "imgui_c.h"
-#include <glad/glad.h>
+#include "input.h"
+#include <lwcgl/glmodern.h>
+#include <lwcgl/lwcgl.h>
 #include "util/types.h"
 #include "cam.h"
 #include <string.h>
@@ -20,22 +22,22 @@ static void ensure_editor_vao(void)
 {
     if (g_editor_vao_initialized) return;
 
-    glGenVertexArrays(1, &g_editor_vao);
-    glGenBuffers(1, &g_editor_vbo);
-    glGenBuffers(1, &g_editor_ebo);
+    GL30.glGenVertexArrays(1, &g_editor_vao);
+    GL15.glGenBuffers(1, &g_editor_vbo);
+    GL15.glGenBuffers(1, &g_editor_ebo);
 
-    glBindVertexArray(g_editor_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_editor_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_editor_ebo);
+    GL30.glBindVertexArray(g_editor_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_editor_vbo);
+    GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_editor_ebo);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
-    glEnableVertexAttribArray(2);
+    GL20.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
+    GL20.glEnableVertexAttribArray(0);
+    GL20.glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
+    GL20.glEnableVertexAttribArray(1);
+    GL20.glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
+    GL20.glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
     g_editor_vao_initialized = true;
 }
 
@@ -255,7 +257,6 @@ void editor_switch_level(i32 idx)
     editor_save(state.editor->level);
     state.level_id = idx;
     apply_level_camera(state.cam, &state.levels[idx]);
-    state.cam->firstMouse = true;
     state.editor->level = &state.levels[idx];
     state.editor->selected_quad = NULL;
     state.editor->selected_sector = NULL;
@@ -274,7 +275,7 @@ static void editor_ui_state(void)
 
     if (imgui_begin("STATE", NULL, IMGUI_WINDOW_ALWAYS_AUTO_RESIZE | IMGUI_WINDOW_NO_MOVE))
     {
-        imgui_text("FPS: %.1f", GL_GETFPS());
+        imgui_text("FPS: %.1f", app_get_fps());
         imgui_text("POS: %.2f  %.2f  %.2f", state.cam->pos.x, state.cam->pos.y, state.cam->pos.z);
         imgui_text("YAW: %.1f   PITCH: %.1f", state.cam->yaw, state.cam->pitch);
         imgui_text("RES: %d x %d   ASPECT: %.3f",
@@ -562,8 +563,11 @@ editor_look_at_info_t editor_get_look_at_info_with_ray(level_data_t* level, vec3
 
 static void editor_pick_ray(vec3s* out_origin, vec3s* out_dir)
 {
-    f64 mx, my;
-    glfwGetCursorPos(state.win, &mx, &my);
+    const f64 mx_fb = (f64)Mouse.getX();
+    const f64 my_fb = (f64)Mouse.getY();
+    f64 mx = state.fb->w > 0 ? mx_fb * (f64)state.fb->ww / (f64)state.fb->w : 0.0;
+    const f64 my_bottom = state.fb->h > 0 ? my_fb * (f64)state.fb->wh / (f64)state.fb->h : 0.0;
+    f64 my = (f64)state.fb->wh - 1.0 - my_bottom;
     if (state.cursor_locked) {
         mx = (f64)state.fb->ww * 0.5;
         my = (f64)state.fb->wh * 0.5;
@@ -618,12 +622,11 @@ void editor_update()
     editor_pick_ray(&ray_origin, &ray_dir);
     editor_look_at_info_t info = editor_get_look_at_info_with_ray(state.editor->level, ray_origin, ray_dir, 100.0f);
 
-    static bool mouse_was_pressed = false;
-    bool mouse_is_pressed = glfwGetMouseButton(state.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-    bool ctrl_held = glfwGetKey(state.win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(state.win, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+    const bool mouse_is_pressed = input_mouse_down(0);
+    const bool ctrl_held = input_key_down(Keyboard.KEY_LCONTROL) || input_key_down(Keyboard.KEY_RCONTROL);
     bool ui_capture = !state.cursor_locked && imgui_want_capture_mouse();
 
-    if (mouse_is_pressed && !mouse_was_pressed && !ui_capture)
+    if (input_mouse_pressed(0) && !ui_capture)
     {
         if (state.editor->portal_link_mode)
         {
@@ -736,7 +739,6 @@ void editor_update()
         }
     }
 
-    mouse_was_pressed = mouse_is_pressed;
 }
 
 static void render_border_segments(const level_quad_t* quad, const vec4s color, bool top, bool bottom, bool left, bool right)
@@ -757,7 +759,7 @@ static void render_border_segments(const level_quad_t* quad, const vec4s color, 
     model[13] = quad->pos.y;
     model[14] = quad->pos.z;
 
-    glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
+    GL20.glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
     texture_bind(texture_get_fallback(), 0);
 
     const f32 t = 0.08f;
@@ -785,13 +787,13 @@ static void render_border_segments(const level_quad_t* quad, const vec4s color, 
 
 #undef PUSH_QUAD
 
-    glBindVertexArray(g_editor_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_editor_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * vcount, vertices, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_editor_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * icount, indices, GL_DYNAMIC_DRAW);
+    GL30.glBindVertexArray(g_editor_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_editor_vbo);
+    GL15.glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * vcount, vertices, GL_DYNAMIC_DRAW);
+    GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_editor_ebo);
+    GL15.glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * icount, indices, GL_DYNAMIC_DRAW);
     glDrawElements(GL_TRIANGLES, (GLsizei)icount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 }
 
 static void editor_render_sector(const level_sector_data_t *sector)

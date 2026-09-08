@@ -1,7 +1,8 @@
 #include "level.h"
 #include "state.h"
 #include "gfx.h"
-#include <glad/glad.h>
+#include <lwcgl/glmodern.h>
+#include <lwcgl/lwcgl.h>
 #include "util/types.h"
 
 #include <string.h>
@@ -79,22 +80,22 @@ void ensure_vao()
 {
     if (g_quad_vao_initialized) return;
 
-    glGenVertexArrays(1, &g_quad_vao);
-    glGenBuffers(1, &g_quad_vbo);
-    glGenBuffers(1, &g_quad_ebo);
+    GL30.glGenVertexArrays(1, &g_quad_vao);
+    GL15.glGenBuffers(1, &g_quad_vbo);
+    GL15.glGenBuffers(1, &g_quad_ebo);
 
-    glBindVertexArray(g_quad_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_quad_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_quad_ebo);
+    GL30.glBindVertexArray(g_quad_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_quad_vbo);
+    GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_quad_ebo);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
-    glEnableVertexAttribArray(2);
+    GL20.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
+    GL20.glEnableVertexAttribArray(0);
+    GL20.glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
+    GL20.glEnableVertexAttribArray(1);
+    GL20.glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
+    GL20.glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
     g_quad_vao_initialized = true;
 }
 
@@ -133,7 +134,7 @@ void level_render_quad(const level_quad_t* quad, const vec4s color)
     model[13] = quad->pos.y;
     model[14] = quad->pos.z;
 
-    glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
+    GL20.glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
 
     if (quad->tex_id >= 0 && quad->tex_id < state.text->count) texture_bind(&state.text->textures[quad->tex_id], 0);
     else texture_bind(texture_get_fallback(), 0);
@@ -151,14 +152,14 @@ void level_render_quad(const level_quad_t* quad, const vec4s color)
         0, 1, 3, 1, 2, 3
     };
 
-    glBindBuffer(GL_ARRAY_BUFFER, g_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_quad_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_quad_vbo);
+    GL15.glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    GL15.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_quad_ebo);
+    GL15.glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glBindVertexArray(g_quad_vao);
+    GL30.glBindVertexArray(g_quad_vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 }
 
 void level_render(const level_data_t *level, const camera_t *cam)

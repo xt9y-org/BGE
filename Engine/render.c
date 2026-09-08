@@ -4,7 +4,8 @@
 #include "portal.h"
 #include "editor.h"
 #include "gun.h"
-#include <glad/glad.h>
+#include <lwcgl/glmodern.h>
+#include <lwcgl/lwcgl.h>
 #include <stdlib.h>
 
 static vec3s quad_world_normal(const level_quad_t* q);
@@ -27,19 +28,19 @@ static u32 g_debug_vbo = 0;
 
 static void debug_init(void)
 {
-    glGenVertexArrays(1, &g_debug_vao);
-    glGenBuffers(1, &g_debug_vbo);
-    glBindVertexArray(g_debug_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_debug_vbo);
-    glBufferData(GL_ARRAY_BUFFER, MAX_DEBUG_SHOTS * 32 * 8 * (i32)sizeof(f32), NULL, GL_DYNAMIC_DRAW);
+    GL30.glGenVertexArrays(1, &g_debug_vao);
+    GL15.glGenBuffers(1, &g_debug_vbo);
+    GL30.glBindVertexArray(g_debug_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_debug_vbo);
+    GL15.glBufferData(GL_ARRAY_BUFFER, MAX_DEBUG_SHOTS * 32 * 8 * (i32)sizeof(f32), NULL, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
-    glBindVertexArray(0);
+    GL20.glEnableVertexAttribArray(0);
+    GL20.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
+    GL20.glEnableVertexAttribArray(1);
+    GL20.glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
+    GL20.glEnableVertexAttribArray(2);
+    GL20.glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
+    GL30.glBindVertexArray(0);
 }
 
 void render_init(void)
@@ -49,8 +50,8 @@ void render_init(void)
 
 void render_shutdown(void)
 {
-    if (g_debug_vbo) glDeleteBuffers(1, &g_debug_vbo);
-    if (g_debug_vao) glDeleteVertexArrays(1, &g_debug_vao);
+    if (g_debug_vbo) GL15.glDeleteBuffers(1, &g_debug_vbo);
+    if (g_debug_vao) GL30.glDeleteVertexArrays(1, &g_debug_vao);
 }
 
 void shoot_bullet(void)
@@ -199,18 +200,18 @@ static void render_debug_shots(void)
 
     glDepthFunc(GL_LEQUAL);
 
-    glUseProgram(state.data->program);
+    GL20.glUseProgram(state.data->program);
     f32 identity[16];
     mat4_identity(identity);
-    glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, identity);
+    GL20.glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, identity);
     texture_bind(&state.text->textures[3], 0);
 
-    glBindVertexArray(g_debug_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_debug_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, total * 8 * sizeof(f32), verts);
+    GL30.glBindVertexArray(g_debug_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_debug_vbo);
+    GL15.glBufferSubData(GL_ARRAY_BUFFER, 0, total * 8 * sizeof(f32), verts);
     if (line_verts) glDrawArrays(GL_LINES, 0, line_verts);
     if (tri_verts) glDrawArrays(GL_TRIANGLES, line_verts, tri_verts);
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 
     glDepthFunc(GL_LESS);
 }
@@ -315,8 +316,8 @@ static void set_camera_uniforms(const camera_t* cam)
     mat4_lookat(view, cam->pos, vec3_add(cam->pos, cam->front), cam->up);
     mat4_perspective(proj, DEG2RAD(45.0f), (f32)state.fb->w / (f32)state.fb->h, 0.1f, 100.0f);
 
-    glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
-    glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
+    GL20.glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
+    GL20.glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
     level_set_frustum(view, proj);
 }
 
@@ -369,8 +370,8 @@ static void render_portals(const level_data_t* level, const camera_t* cam, i32 d
 
             oblique_near_clip(proj, view, link.dst->pos, quad_world_normal(link.dst));
 
-            glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
-            glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
+            GL20.glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
+            GL20.glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
             level_set_frustum(view, proj);
 
             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -390,8 +391,8 @@ static void render_portals(const level_data_t* level, const camera_t* cam, i32 d
             glStencilMask(0x00);
             glStencilFunc(GL_EQUAL, stencil_ref + 1, 0xFF);
             glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-            glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
-            glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
+            GL20.glUniformMatrix4fv(state.data->u_view, 1, GL_FALSE, view);
+            GL20.glUniformMatrix4fv(state.data->u_proj, 1, GL_FALSE, proj);
 
             level_render(level, &portal_cam);
             render_debug_shots();
@@ -437,7 +438,7 @@ void render_main(i32 rw, i32 rh)
 
     fbo_resize(rw, rh);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+    GL30.glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
     glViewport(0, 0, rw, rh);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -445,10 +446,10 @@ void render_main(i32 rw, i32 rh)
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0xFF);
 
-    glUseProgram(state.data->program);
+    GL20.glUseProgram(state.data->program);
     f32 model[16];
     mat4_identity(model);
-    glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
+    GL20.glUniformMatrix4fv(state.data->u_model, 1, GL_FALSE, model);
     set_camera_uniforms(state.cam);
 
     render_portals(state.editor->level, state.cam, 0, 0);

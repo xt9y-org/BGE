@@ -1,6 +1,7 @@
 #include "text.h"
 #include "state.h"
-#include <glad/glad.h>
+#include <lwcgl/glmodern.h>
+#include <lwcgl/lwcgl.h>
 #include "util/math.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -81,7 +82,7 @@ texture_t* texture_create(const char* path, const tex_filter_t filter, const tex
 
         const GLenum format = (channels == 4) ? GL_RGBA : GL_RGB;
         glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        GL30.glGenerateMipmap(GL_TEXTURE_2D);
         stbi_image_free(data);
     } else {
         printf("Failed to load texture: %s, using fallback\n", path);
@@ -123,7 +124,7 @@ texture_t* texture_get_by_name(const char* name)
 void texture_bind(texture_t* tex, const u32 unit)
 {
     if (!tex) tex = &g_registry.fallback;
-    glActiveTexture(GL_TEXTURE0 + unit);
+    GLModern.glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, tex->id);
 }
 
@@ -300,20 +301,20 @@ void text_init()
 
     g_text_program = create_program(vs, fs);
 
-    glGenVertexArrays(1, &g_text_vao);
-    glGenBuffers(1, &g_text_vbo);
-    glBindVertexArray(g_text_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_text_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * MAX_TEXT_VERTICES, NULL, GL_DYNAMIC_DRAW);
+    GL30.glGenVertexArrays(1, &g_text_vao);
+    GL15.glGenBuffers(1, &g_text_vbo);
+    GL30.glBindVertexArray(g_text_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_text_vbo);
+    GL15.glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * MAX_TEXT_VERTICES, NULL, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 3));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 5));
+    GL20.glEnableVertexAttribArray(0);
+    GL20.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)0);
+    GL20.glEnableVertexAttribArray(1);
+    GL20.glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 3));
+    GL20.glEnableVertexAttribArray(2);
+    GL20.glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 5));
 
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 }
 
 u32 text_get_program(void)
@@ -323,9 +324,9 @@ u32 text_get_program(void)
 
 void text_shutdown(void)
 {
-    if (g_text_vbo) glDeleteBuffers(1, &g_text_vbo);
-    if (g_text_vao) glDeleteVertexArrays(1, &g_text_vao);
-    if (g_text_program) glDeleteProgram(g_text_program);
+    if (g_text_vbo) GL15.glDeleteBuffers(1, &g_text_vbo);
+    if (g_text_vao) GL30.glDeleteVertexArrays(1, &g_text_vao);
+    if (g_text_program) GL20.glDeleteProgram(g_text_program);
     g_text_vbo = 0;
     g_text_vao = 0;
     g_text_program = 0;
@@ -383,17 +384,17 @@ void text_flush(const int fbw, const int fbh)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glUseProgram(g_text_program);
-    glUniformMatrix4fv(glGetUniformLocation(g_text_program, "u_proj"), 1, GL_FALSE, proj);
-    glUniform1i(glGetUniformLocation(g_text_program, "u_font"), 0);
+    GL20.glUseProgram(g_text_program);
+    GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(g_text_program, "u_proj"), 1, GL_FALSE, proj);
+    GL20.glUniform1i(GL20.glGetUniformLocation(g_text_program, "u_font"), 0);
 
     texture_bind(g_font_tex, 0);
 
-    glBindVertexArray(g_text_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_text_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_t) * state.text_vertex_count, state.text_vertices);
+    GL30.glBindVertexArray(g_text_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_text_vbo);
+    GL15.glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_t) * state.text_vertex_count, state.text_vertices);
     glDrawArrays(GL_TRIANGLES, 0, (i32)state.text_vertex_count);
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
