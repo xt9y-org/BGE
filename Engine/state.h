@@ -1,8 +1,6 @@
 #ifndef STATE_H
 #define STATE_H
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include "cam.h"
 #include "text.h"
 #include "util/types.h"
@@ -20,7 +18,7 @@ typedef enum {
 
 typedef struct {
     u32 vao, vbo, ebo, program;
-    GLint u_model, u_view, u_proj;
+    i32 u_model, u_view, u_proj;
 } data_t;
 
 typedef struct {
@@ -30,13 +28,12 @@ typedef struct {
 
 typedef struct {
     bool cursor_locked;
-    GLFWwindow* win;
     state_e id;
     f32 dt;
     framebuffer_t* fb;
     data_t* data;
     camera_t* cam;
-    
+
     editor_t* editor;
 
     texture_registry_t* text;
