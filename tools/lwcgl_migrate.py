@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 FILES = [
     Path("Engine/text.c"),
@@ -125,6 +126,5 @@ for path in FILES:
     if "glad" in text:
         raise SystemExit(f"{path} still contains GLAD")
     for name in MODERN:
-        bare = f"{name}("
-        if bare in text:
+        if re.search(rf"(?<!\.)\b{re.escape(name)}\(", text):
             raise SystemExit(f"{path} still contains bare modern call {name}")
