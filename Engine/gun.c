@@ -1,13 +1,14 @@
 #include "gun.h"
+#include "input.h"
 #include "state.h"
-#include <glad/glad.h>
+
+#include <lwcgl/lwcgl.h>
 #include <math.h>
 #include <string.h>
 
 static u32 g_vao = 0, g_vbo = 0;
 static i32 g_current = 0;
 static f32 g_swing = 0.0f, g_swing_vel = 0.0f;
-static bool g_a_prev = false, g_d_prev = false;
 static f32 g_flash_timer = 0.0f;
 static f32 g_anim_time = 0.0f;
 static f32 g_bob_time = 0.0f;
@@ -22,8 +23,6 @@ void gun_init(void)
 {
     g_swing = 0.0f;
     g_swing_vel = 0.0f;
-    g_a_prev = false;
-    g_d_prev = false;
     g_flash_timer = 0.0f;
     g_anim_time = 0.0f;
     g_bob_time = 0.0f;
@@ -37,25 +36,25 @@ void gun_init(void)
         {{1,1,0}, {1,1}, {1,1,1,1}},
     };
 
-    glGenVertexArrays(1, &g_vao);
-    glGenBuffers(1, &g_vbo);
-    glBindVertexArray(g_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    GL30.glGenVertexArrays(1, &g_vao);
+    GL15.glGenBuffers(1, &g_vbo);
+    GL30.glBindVertexArray(g_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
+    GL15.glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 3));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 5));
-    glBindVertexArray(0);
+    GL20.glEnableVertexAttribArray(0);
+    GL20.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)0);
+    GL20.glEnableVertexAttribArray(1);
+    GL20.glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 3));
+    GL20.glEnableVertexAttribArray(2);
+    GL20.glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)(sizeof(f32) * 5));
+    GL30.glBindVertexArray(0);
 }
 
 void gun_shutdown(void)
 {
-    if (g_vbo) glDeleteBuffers(1, &g_vbo);
-    if (g_vao) glDeleteVertexArrays(1, &g_vao);
+    if (g_vbo) GL15.glDeleteBuffers(1, &g_vbo);
+    if (g_vao) GL30.glDeleteVertexArrays(1, &g_vao);
     g_vbo = 0;
     g_vao = 0;
 }
@@ -63,41 +62,38 @@ void gun_shutdown(void)
 static i32 gun_current_frame(const weapon_def_t* w)
 {
     if (w->frame_duration <= 0.0f || w->tex_count <= 1) return 0;
-    i32 f = (i32)(g_anim_time / w->frame_duration);
-    if (f >= w->tex_count) { g_anim_time = 0.0f; return 0; }
-    return f;
+    i32 frame = (i32)(g_anim_time / w->frame_duration);
+    if (frame >= w->tex_count) {
+        g_anim_time = 0.0f;
+        return 0;
+    }
+    return frame;
 }
 
 void gun_render(i32 rw, i32 rh)
 {
-    if (state.id != STATE_PLAYING) return;
-    if (!g_vao) return;
+    if (state.id != STATE_PLAYING || !g_vao) return;
     if (g_current < 0 || g_current >= state.gun->count) return;
 
     const weapon_def_t* w = &state.gun->defs[g_current];
-
-    i32 frame = gun_current_frame(w);
+    const i32 frame = gun_current_frame(w);
     const texture_t* tex = texture_get_by_name(w->tex_names[frame]);
     if (!tex || tex->width <= 0 || tex->height <= 0) return;
 
     if (g_anim_time > 0.0f) g_anim_time += state.dt;
 
-    bool a_down = glfwGetKey(state.win, GLFW_KEY_A) == GLFW_PRESS;
-    bool d_down = glfwGetKey(state.win, GLFW_KEY_D) == GLFW_PRESS;
-    if (a_down && !g_a_prev) g_swing_vel = -120.0f;
-    if (d_down && !g_d_prev) g_swing_vel = 120.0f;
-    g_a_prev = a_down;
-    g_d_prev = d_down;
+    if (input_key_pressed(Keyboard.KEY_A)) g_swing_vel = -120.0f;
+    if (input_key_pressed(Keyboard.KEY_D)) g_swing_vel = 120.0f;
     g_swing_vel += (-150.0f * g_swing - 12.0f * g_swing_vel) * state.dt;
     g_swing += g_swing_vel * state.dt;
 
     g_bob_time += state.dt;
-    f32 t = g_bob_time;
-    f32 aspect = (f32)tex->width / (f32)tex->height;
-    f32 gh = (f32)rh * w->gun_size;
-    f32 gw = gh * aspect;
-    f32 gx = (f32)rw * w->gun_xy.x - gw * 0.5f + sinf(t * 1.8f) * 3.0f + g_swing;
-    f32 gy = (f32)rh * w->gun_xy.y - gh + cosf(t * 2.2f) * 2.5f;
+    const f32 t = g_bob_time;
+    const f32 aspect = (f32)tex->width / (f32)tex->height;
+    const f32 gh = (f32)rh * w->gun_size;
+    const f32 gw = gh * aspect;
+    const f32 gx = (f32)rw * w->gun_xy.x - gw * 0.5f + sinf(t * 1.8f) * 3.0f + g_swing;
+    const f32 gy = (f32)rh * w->gun_xy.y - gh + cosf(t * 2.2f) * 2.5f;
 
     f32 proj[16];
     mat4_ortho(proj, 0.0f, (f32)rw, (f32)rh, 0.0f, -1.0f, 1.0f);
@@ -106,18 +102,18 @@ void gun_render(i32 rw, i32 rh)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    u32 program = text_get_program();
-    glUseProgram(program);
-    glUniformMatrix4fv(glGetUniformLocation(program, "u_proj"), 1, GL_FALSE, proj);
-    glUniform1i(glGetUniformLocation(program, "u_font"), 0);
+    const u32 program = text_get_program();
+    GL20.glUseProgram(program);
+    GL20.glUniformMatrix4fv(GL20.glGetUniformLocation(program, "u_proj"), 1, GL_FALSE, proj);
+    GL20.glUniform1i(GL20.glGetUniformLocation(program, "u_font"), 0);
 
     g_flash_timer -= state.dt;
     if (g_flash_timer > 0 && w->flash_tex_name) {
         const texture_t* flash = texture_get_by_name(w->flash_tex_name);
         if (flash && flash->width > 0) {
-            f32 fs = w->flash_size * (f32)rh;
-            f32 fx = gx + gw * w->flash_xy.x - fs * 0.5f;
-            f32 fy = gy + gh * w->flash_xy.y - fs * 0.5f;
+            const f32 fs = w->flash_size * (f32)rh;
+            const f32 fx = gx + gw * w->flash_xy.x - fs * 0.5f;
+            const f32 fy = gy + gh * w->flash_xy.y - fs * 0.5f;
             vertex_t fverts[6] = {
                 {{fx, fy, 0}, {0, 0}, {1,1,1,1}},
                 {{fx+fs, fy+fs, 0}, {1, 1}, {1,1,1,1}},
@@ -127,9 +123,9 @@ void gun_render(i32 rw, i32 rh)
                 {{fx+fs, fy+fs, 0}, {1, 1}, {1,1,1,1}},
             };
             texture_bind((texture_t*)flash, 0);
-            glBindVertexArray(g_vao);
-            glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(fverts), fverts);
+            GL30.glBindVertexArray(g_vao);
+            GL15.glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
+            GL15.glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(fverts), fverts);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
     }
@@ -144,11 +140,11 @@ void gun_render(i32 rw, i32 rh)
         {{gx+gw, gy+gh, 0}, {1, 1}, {1,1,1,1}},
     };
 
-    glBindVertexArray(g_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+    GL30.glBindVertexArray(g_vao);
+    GL15.glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
+    GL15.glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    GL30.glBindVertexArray(0);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -173,10 +169,12 @@ void gun_select(i32 idx)
 
 void gun_next(void)
 {
-    g_current = (g_current + 1) % state.gun->count;
+    if (state.gun->count > 0)
+        g_current = (g_current + 1) % state.gun->count;
 }
 
 void gun_prev(void)
 {
-    g_current = (g_current - 1 + state.gun->count) % state.gun->count;
+    if (state.gun->count > 0)
+        g_current = (g_current - 1 + state.gun->count) % state.gun->count;
 }
