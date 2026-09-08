@@ -3,6 +3,10 @@
 
 #include "util/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void input_init(void);
 void input_begin_frame(void);
 
@@ -27,6 +31,10 @@ void input_test_set_key(i32 key, bool down);
 void input_test_set_mouse(i32 button, bool down);
 void input_test_set_mouse_motion(f32 dx, f32 dy, f32 wheel);
 void input_test_set_grabbed(bool grabbed);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
