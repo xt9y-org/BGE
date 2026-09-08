@@ -2,6 +2,11 @@ name: BGE Headless CI
 
 'on':
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - rebuild/lwcgl-v2.9.3
+  pull_request:
 
 permissions:
   contents: read
@@ -22,37 +27,67 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            git \
-            libegl1-mesa-dev \
-            libgl1-mesa-dev \
-            libx11-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libxcursor-dev \
-            libxinerama-dev \
-            libxext-dev \
-            mesa-utils \
-            xauth \
-            xvfb
+            build-essential git pkg-config \
+            libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev libegl1-mesa-dev \
+            libx11-dev libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev libxext-dev \
+            mesa-utils xauth xvfb
+
+      - name: Install lwcgl v2.9.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            rm -rf /tmp/lwcgl
+            if git clone --depth 1 --branch v2.9.3 https://github.com/xt9y/lwcgl.git /tmp/lwcgl; then
+              break
+            fi
+            test "$attempt" -lt 3
+            sleep $((attempt * 2))
+          done
+          make -C /tmp/lwcgl -j2 all
+          sudo make -C /tmp/lwcgl install
+          sudo ldconfig
+          test -f /usr/local/include/lwcgl-2.9.3/lwcgl/lwcgl.h
+          test -e /usr/local/lib/liblwcgl.so
+
+      - name: Verify dependency boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '/usr/local/include/lwcgl-2.9.3' build.c
+          grep -q -- '-llwcgl' build.c
+          if grep -E -n 'git clone|curl|wget' build.c; then
+            echo 'build.c must not download dependencies'
+            exit 1
+          fi
+          if grep -R -n -E 'GLFW/|glfw[A-Z_]|<glad/|imgui_impl_glfw' \
+              --include='*.c' --include='*.h' --include='*.cpp' \
+              Engine main.c build.c; then
+            echo 'direct GLFW/GLAD dependency remains in BGE source'
+            exit 1
+          fi
+
+      - name: Test input edge contract
+        run: |
+          cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
+            -DBGE_INPUT_TEST -I. -I/usr/local/include/lwcgl-2.9.3 \
+            tests/input_edges.c Engine/input.c \
+            -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl -lm \
+            -o /tmp/bge-input-edges
+          /tmp/bge-input-edges
 
       - name: Install C-BuildSystem
         shell: bash
         run: |
           set -euo pipefail
-          clone_retry() {
-            local url="$1" dest="$2"
-            for attempt in 1 2 3; do
-              rm -rf "$dest"
-              if git clone --depth 1 "$url" "$dest"; then
-                return 0
-              fi
-              echo "clone attempt $attempt failed: $url" >&2
-              sleep $((attempt * 2))
-            done
-            return 1
-          }
-          clone_retry https://github.com/xt9y/C-BuildSystem.git /tmp/xt9y-c
+          for attempt in 1 2 3; do
+            rm -rf /tmp/xt9y-c
+            if git clone --depth 1 https://github.com/xt9y/C-BuildSystem.git /tmp/xt9y-c; then
+              break
+            fi
+            test "$attempt" -lt 3
+            sleep $((attempt * 2))
+          done
           make -C /tmp/xt9y-c -j2
           sudo make -C /tmp/xt9y-c install
           c --version
@@ -61,19 +96,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          clone_retry() {
-            local url="$1" dest="$2"
-            for attempt in 1 2 3; do
-              rm -rf "$dest"
-              if git clone --depth 1 "$url" "$dest"; then
-                return 0
-              fi
-              echo "clone attempt $attempt failed: $url" >&2
-              sleep $((attempt * 2))
-            done
-            return 1
-          }
-          clone_retry https://github.com/xt9y/RendererCheck.git /tmp/renderercheck
+          for attempt in 1 2 3; do
+            rm -rf /tmp/renderercheck
+            if git clone --depth 1 https://github.com/xt9y/RendererCheck.git /tmp/renderercheck; then
+              break
+            fi
+            test "$attempt" -lt 3
+            sleep $((attempt * 2))
+          done
           make -C /tmp/renderercheck -j2
           sudo make -C /tmp/renderercheck install
           renderercheck version
@@ -141,7 +171,6 @@ jobs:
           BASELINE="$BASELINE" python3 - <<'PY'
           import os
           from pathlib import Path
-
           path = Path(os.environ['BASELINE'])
           data = bytearray(path.read_bytes())
           pos = 0
@@ -167,7 +196,6 @@ jobs:
           trap 'mv /tmp/rendercheck.toml.saved rendercheck.toml' EXIT
           python3 - <<'PY'
           from pathlib import Path
-
           path = Path('rendercheck.toml')
           path.write_text(path.read_text().replace('max_process_ms = 20000.0', 'max_process_ms = 0.001'))
           PY
