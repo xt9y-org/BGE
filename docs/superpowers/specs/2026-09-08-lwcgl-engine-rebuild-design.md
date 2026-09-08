@@ -48,7 +48,7 @@ Remove the obsolete duplicated platform stack:
 - `imgui_impl_glfw.cpp/.h`
 - GLFW/GLAD source and include wiring from `build.c`
 - direct GLFW/X11/Cocoa link plumbing that exists only because BGE currently builds GLFW itself
-- stale CMake GLFW wiring if `Engine/CMakeLists.txt` is not part of the supported build path
+- `Engine/CMakeLists.txt`, because the repository's supported build path is C-BuildSystem and the CMake file duplicates the obsolete GLFW integration
 
 Keep ImGui and any other vendor code still used by BGE.
 
@@ -58,9 +58,9 @@ The supported build remains the repository's C-BuildSystem `build.c` flow.
 
 `build.c` must:
 
-- include `/usr/local/include/lwcgl-2.9.3` or the existing installed lwcgl include location used by the other xt9y projects;
+- include the installed lwcgl v2.9.3 headers from `/usr/local/include/lwcgl-2.9.3`;
 - link `/usr/local/lib` and `-llwcgl`;
-- keep the platform system libraries required by lwcgl/OpenGL but stop compiling BGE's own GLFW and GLAD copies;
+- keep only the platform system libraries required by lwcgl/OpenGL and stop compiling BGE's own GLFW and GLAD copies;
 - retain C/C++ linkage needed by ImGui;
 - keep strict warnings enabled;
 - keep the executable target named `bge`.
@@ -78,13 +78,13 @@ Replace the current GLFW lifecycle in `Engine/App.c` with lwcgl:
 5. initialize renderer, text, ImGui, framebuffer/post-process resources, and game state;
 6. each frame, process Display messages and poll Keyboard/Mouse;
 7. run input/update/render;
-8. present with `Display.updateNoMessages()` or the appropriate lwcgl Display call exactly once per frame;
+8. present with `Display.updateNoMessages()` exactly once per frame;
 9. shutdown in reverse ownership order;
 10. destroy Mouse, Keyboard, and Display.
 
 Use `Sys.getTime()` / `Sys.getTimerResolution()` for engine timing rather than `glfwGetTime()`.
 
-Do not access the native GLFW window for normal runtime logic.
+Do not access the native GLFW window from BGE runtime code.
 
 ## Application structure cleanup
 
@@ -192,9 +192,9 @@ Add a small BGE-owned `imgui_impl_lwcgl.cpp/.h` platform backend that feeds Dear
 - mouse position/buttons/wheel;
 - cursor/grab interaction needed by BGE's editor.
 
-Keep `imgui_impl_opengl3` as the renderer backend if it works without GLAD/GLFW coupling. Configure it against the context BGE creates through lwcgl.
+Keep `imgui_impl_opengl3` as the renderer backend. Initialize it with the GLSL version matching BGE's lwcgl-created context. If the vendored ImGui OpenGL3 backend's loader configuration conflicts with lwcgl, configure that backend to use the already-loaded OpenGL symbols without adding GLAD, GLEW, GLFW, or another loader.
 
-The custom backend must not call GLFW through `Display.getNativeWindow()`.
+The custom platform backend must not call GLFW through `Display.getNativeWindow()`.
 
 ## State cleanup
 
