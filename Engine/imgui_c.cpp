@@ -6,6 +6,7 @@
 #include "state.h"
 
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 
 extern "C" {
@@ -98,30 +99,11 @@ bool imgui_begin(const char* title, bool* open, i32 window_flags)
     return ImGui::Begin(title, open, (ImGuiWindowFlags)window_flags);
 }
 
-void imgui_end(void)
-{
-    ImGui::End();
-}
-
-void imgui_set_next_window_pos(f32 x, f32 y, i32 cond)
-{
-    ImGui::SetNextWindowPos(ImVec2(x, y), (ImGuiCond)cond);
-}
-
-void imgui_set_next_window_size(f32 w, f32 h, i32 cond)
-{
-    ImGui::SetNextWindowSize(ImVec2(w, h), (ImGuiCond)cond);
-}
-
-void imgui_set_next_window_bg_alpha(f32 alpha)
-{
-    ImGui::SetNextWindowBgAlpha(alpha);
-}
-
-void imgui_set_next_window_collapsed(bool collapsed, i32 cond)
-{
-    ImGui::SetNextWindowCollapsed(collapsed, (ImGuiCond)cond);
-}
+void imgui_end(void) { ImGui::End(); }
+void imgui_set_next_window_pos(f32 x, f32 y, i32 cond) { ImGui::SetNextWindowPos(ImVec2(x, y), (ImGuiCond)cond); }
+void imgui_set_next_window_size(f32 w, f32 h, i32 cond) { ImGui::SetNextWindowSize(ImVec2(w, h), (ImGuiCond)cond); }
+void imgui_set_next_window_bg_alpha(f32 alpha) { ImGui::SetNextWindowBgAlpha(alpha); }
+void imgui_set_next_window_collapsed(bool collapsed, i32 cond) { ImGui::SetNextWindowCollapsed(collapsed, (ImGuiCond)cond); }
 
 void imgui_text(const char* fmt, ...)
 {
@@ -133,136 +115,38 @@ void imgui_text(const char* fmt, ...)
     ImGui::TextUnformatted(buf);
 }
 
-void imgui_same_line(void)
-{
-    ImGui::SameLine();
-}
+void imgui_same_line(void) { ImGui::SameLine(); }
+void imgui_same_line_offset(f32 x) { ImGui::SameLine(x); }
+void imgui_separator(void) { ImGui::Separator(); }
+void imgui_spacing(void) { ImGui::Spacing(); }
+void imgui_new_line(void) { ImGui::NewLine(); }
+void imgui_indent(void) { ImGui::Indent(); }
+void imgui_unindent(void) { ImGui::Unindent(); }
+void imgui_begin_disabled(bool disabled) { ImGui::BeginDisabled(disabled); }
+void imgui_end_disabled(void) { ImGui::EndDisabled(); }
+void imgui_push_item_width(f32 width) { ImGui::PushItemWidth(width); }
+void imgui_pop_item_width(void) { ImGui::PopItemWidth(); }
+void imgui_align_text_to_frame_padding(void) { ImGui::AlignTextToFramePadding(); }
 
-void imgui_same_line_offset(f32 x)
-{
-    ImGui::SameLine(x);
-}
-
-void imgui_separator(void)
-{
-    ImGui::Separator();
-}
-
-void imgui_spacing(void)
-{
-    ImGui::Spacing();
-}
-
-void imgui_new_line(void)
-{
-    ImGui::NewLine();
-}
-
-void imgui_indent(void)
-{
-    ImGui::Indent();
-}
-
-void imgui_unindent(void)
-{
-    ImGui::Unindent();
-}
-
-void imgui_begin_disabled(bool disabled)
-{
-    ImGui::BeginDisabled(disabled);
-}
-
-void imgui_end_disabled(void)
-{
-    ImGui::EndDisabled();
-}
-
-void imgui_push_item_width(f32 width)
-{
-    ImGui::PushItemWidth(width);
-}
-
-void imgui_pop_item_width(void)
-{
-    ImGui::PopItemWidth();
-}
-
-void imgui_align_text_to_frame_padding(void)
-{
-    ImGui::AlignTextToFramePadding();
-}
-
-bool imgui_button(const char* label)
-{
-    return ImGui::Button(label);
-}
-
-bool imgui_checkbox(const char* label, bool* v)
-{
-    return ImGui::Checkbox(label, v);
-}
-
-bool imgui_slider_float(const char* label, f32* v, f32 v_min, f32 v_max)
-{
-    return ImGui::SliderFloat(label, v, v_min, v_max);
-}
-
-bool imgui_slider_int(const char* label, i32* v, i32 v_min, i32 v_max)
-{
-    return ImGui::SliderInt(label, v, v_min, v_max);
-}
-
-bool imgui_color_edit3(const char* label, f32 v[3])
-{
-    return ImGui::ColorEdit3(label, v, ImGuiColorEditFlags_NoInputs);
-}
-
-bool imgui_color_edit4(const char* label, f32 v[4])
-{
-    return ImGui::ColorEdit4(label, v, ImGuiColorEditFlags_NoInputs);
-}
-
-bool imgui_input_int(const char* label, i32* v)
-{
-    return ImGui::InputInt(label, v);
-}
-
-bool imgui_input_float(const char* label, f32* v)
-{
-    return ImGui::InputFloat(label, v);
-}
-
-bool imgui_combo(const char* label, i32* current_idx, const char* const* items, i32 items_count)
-{
-    return ImGui::Combo(label, current_idx, items, items_count);
-}
-
-bool imgui_selectable(const char* label, bool selected)
-{
-    return ImGui::Selectable(label, selected);
-}
-
-bool imgui_collapsing_header(const char* label)
-{
-    return ImGui::CollapsingHeader(label);
-}
-
-bool imgui_radio(const char* label, i32* v, i32 v_button)
-{
-    return ImGui::RadioButton(label, v, v_button);
-}
+bool imgui_button(const char* label) { return ImGui::Button(label); }
+bool imgui_checkbox(const char* label, bool* v) { return ImGui::Checkbox(label, v); }
+bool imgui_slider_float(const char* label, f32* v, f32 v_min, f32 v_max) { return ImGui::SliderFloat(label, v, v_min, v_max); }
+bool imgui_slider_int(const char* label, i32* v, i32 v_min, i32 v_max) { return ImGui::SliderInt(label, v, v_min, v_max); }
+bool imgui_color_edit3(const char* label, f32 v[3]) { return ImGui::ColorEdit3(label, v, ImGuiColorEditFlags_NoInputs); }
+bool imgui_color_edit4(const char* label, f32 v[4]) { return ImGui::ColorEdit4(label, v, ImGuiColorEditFlags_NoInputs); }
+bool imgui_input_int(const char* label, i32* v) { return ImGui::InputInt(label, v); }
+bool imgui_input_float(const char* label, f32* v) { return ImGui::InputFloat(label, v); }
+bool imgui_combo(const char* label, i32* current_idx, const char* const* items, i32 items_count) { return ImGui::Combo(label, current_idx, items, items_count); }
+bool imgui_selectable(const char* label, bool selected) { return ImGui::Selectable(label, selected); }
+bool imgui_collapsing_header(const char* label) { return ImGui::CollapsingHeader(label); }
+bool imgui_radio(const char* label, i32* v, i32 v_button) { return ImGui::RadioButton(label, v, v_button); }
 
 bool imgui_begin_child(const char* str_id, f32 width, f32 height, bool border)
 {
     const ImGuiChildFlags flags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
     return ImGui::BeginChild(str_id, ImVec2(width, height), flags);
 }
-
-void imgui_end_child(void)
-{
-    ImGui::EndChild();
-}
+void imgui_end_child(void) { ImGui::EndChild(); }
 
 void imgui_image(u32 texture_id, f32 width, f32 height)
 {
@@ -274,25 +158,10 @@ bool imgui_image_button(const char* str_id, u32 texture_id, f32 width, f32 heigh
     return ImGui::ImageButton(str_id, ImTextureRef((ImTextureID)(uintptr_t)texture_id), ImVec2(width, height));
 }
 
-bool imgui_is_item_clicked(i32 mouse_button)
-{
-    return ImGui::IsItemClicked((ImGuiMouseButton)mouse_button);
-}
-
-bool imgui_is_item_hovered(void)
-{
-    return ImGui::IsItemHovered();
-}
-
-bool imgui_is_window_hovered(void)
-{
-    return ImGui::IsWindowHovered();
-}
-
-bool imgui_is_any_item_hovered(void)
-{
-    return ImGui::IsAnyItemHovered();
-}
+bool imgui_is_item_clicked(i32 mouse_button) { return ImGui::IsItemClicked((ImGuiMouseButton)mouse_button); }
+bool imgui_is_item_hovered(void) { return ImGui::IsItemHovered(); }
+bool imgui_is_window_hovered(void) { return ImGui::IsWindowHovered(); }
+bool imgui_is_any_item_hovered(void) { return ImGui::IsAnyItemHovered(); }
 
 void imgui_set_tooltip(const char* fmt, ...)
 {
@@ -304,44 +173,13 @@ void imgui_set_tooltip(const char* fmt, ...)
     ImGui::SetTooltip("%s", buf);
 }
 
-void imgui_open_popup(const char* str_id)
-{
-    ImGui::OpenPopup(str_id);
-}
-
-bool imgui_begin_popup(const char* str_id)
-{
-    return ImGui::BeginPopup(str_id);
-}
-
-void imgui_end_popup(void)
-{
-    ImGui::EndPopup();
-}
-
-void imgui_close_current_popup(void)
-{
-    ImGui::CloseCurrentPopup();
-}
-
-void imgui_push_id_int(i32 id)
-{
-    ImGui::PushID(id);
-}
-
-void imgui_pop_id(void)
-{
-    ImGui::PopID();
-}
-
-f32 imgui_get_font_size(void)
-{
-    return ImGui::GetFontSize();
-}
-
-f32 imgui_calc_text_width(const char* text)
-{
-    return ImGui::CalcTextSize(text).x;
-}
+void imgui_open_popup(const char* str_id) { ImGui::OpenPopup(str_id); }
+bool imgui_begin_popup(const char* str_id) { return ImGui::BeginPopup(str_id); }
+void imgui_end_popup(void) { ImGui::EndPopup(); }
+void imgui_close_current_popup(void) { ImGui::CloseCurrentPopup(); }
+void imgui_push_id_int(i32 id) { ImGui::PushID(id); }
+void imgui_pop_id(void) { ImGui::PopID(); }
+f32 imgui_get_font_size(void) { return ImGui::GetFontSize(); }
+f32 imgui_calc_text_width(const char* text) { return ImGui::CalcTextSize(text).x; }
 
 }
