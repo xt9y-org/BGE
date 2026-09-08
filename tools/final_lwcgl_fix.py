@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-shot guarded migration for the final renderer platform leaks.
 path = Path("Engine/render.c")
 text = path.read_text()
 
