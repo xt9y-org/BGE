@@ -39,9 +39,14 @@ void ImGui_ImplLwcgl_NewFrame(float dt,
 
     ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2((float)window_w, (float)window_h);
+
+    const float framebuffer_scale_x =
+        window_w > 0 ? (float)framebuffer_w / (float)window_w : 1.0f;
+    const float framebuffer_scale_y =
+        window_h > 0 ? (float)framebuffer_h / (float)window_h : 1.0f;
     io.DisplayFramebufferScale = ImVec2(
-        window_w > 0 ? (float)framebuffer_w / (float)window_w : 1.0f,
-        window_h > 0 ? (float)framebuffer_h / (float)window_h : 1.0f);
+        framebuffer_scale_x < 1.0f ? 1.0f : framebuffer_scale_x,
+        framebuffer_scale_y < 1.0f ? 1.0f : framebuffer_scale_y);
     io.DeltaTime = dt > 0.0f ? dt : (1.0f / 60.0f);
 
     const float mx = framebuffer_w > 0
