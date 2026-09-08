@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 bool imgui_init(void);
-void imgui_newframe(void);
+void imgui_newframe(f32 dt, i32 window_w, i32 window_h, i32 framebuffer_w, i32 framebuffer_h);
 void imgui_render(void);
 void imgui_shutdown(void);
 

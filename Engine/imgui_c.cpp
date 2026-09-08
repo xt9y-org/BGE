@@ -3,7 +3,6 @@
 #include "imgui.h"
 #include "imgui_impl_lwcgl.h"
 #include "imgui_impl_opengl3.h"
-#include "state.h"
 
 #include <cstdarg>
 #include <cstdint>
@@ -43,16 +42,11 @@ bool imgui_init(void)
     return true;
 }
 
-void imgui_newframe(void)
+void imgui_newframe(f32 dt, i32 window_w, i32 window_h, i32 framebuffer_w, i32 framebuffer_h)
 {
     if (!ImGui::GetCurrentContext()) return;
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplLwcgl_NewFrame(
-        state.dt,
-        state.fb ? state.fb->ww : 0,
-        state.fb ? state.fb->wh : 0,
-        state.fb ? state.fb->w : 0,
-        state.fb ? state.fb->h : 0);
+    ImGui_ImplLwcgl_NewFrame(dt, window_w, window_h, framebuffer_w, framebuffer_h);
     ImGui::NewFrame();
 }
 
