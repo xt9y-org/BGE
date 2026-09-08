@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: rebuild/lwcgl-v2.9.3
-      - name: Apply final render cleanup
+      - name: Apply guarded cleanup
         run: python3 tools/final_lwcgl_fix.py
       - name: Commit generated cleanup
         run: |
@@ -25,7 +25,7 @@ jobs:
           git config user.name "xt9y"
           git config user.email "felix@xt9y.de"
           git diff --check
-          git add Engine/render.c
+          git add Engine/imgui_c.h Engine/imgui_c.cpp Engine/game.c
           git diff --cached --exit-code && { echo 'cleanup produced no diff' >&2; exit 1; } || true
-          git commit -m "render: remove remaining GLFW timing state"
+          git commit -m "imgui: isolate C++ platform boundary"
           git push origin HEAD:rebuild/lwcgl-v2.9.3
