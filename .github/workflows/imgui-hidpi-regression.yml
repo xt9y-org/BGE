@@ -4,7 +4,8 @@ name: ImGui HiDPI Regression
   workflow_dispatch:
   push:
     branches:
-      - fix/imgui-hidpi-scale
+      - main
+  pull_request:
 
 permissions:
   contents: read
