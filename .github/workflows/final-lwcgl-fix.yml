@@ -1,0 +1,31 @@
+name: final-lwcgl-fix
+
+on:
+  push:
+    branches:
+      - rebuild/lwcgl-v2.9.3
+    paths:
+      - tools/final_lwcgl_fix.py
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rebuild/lwcgl-v2.9.3
+      - name: Apply final render cleanup
+        run: python3 tools/final_lwcgl_fix.py
+      - name: Commit generated cleanup
+        run: |
+          set -euo pipefail
+          git config user.name "xt9y"
+          git config user.email "felix@xt9y.de"
+          git diff --check
+          git add Engine/render.c
+          git diff --cached --exit-code && { echo 'cleanup produced no diff' >&2; exit 1; } || true
+          git commit -m "render: remove remaining GLFW timing state"
+          git push origin HEAD:rebuild/lwcgl-v2.9.3
