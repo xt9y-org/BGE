@@ -1,0 +1,31 @@
+name: mechanical-lwcgl-migration
+
+on:
+  push:
+    branches:
+      - rebuild/lwcgl-v2.9.3
+    paths:
+      - tools/lwcgl_migrate.py
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: rebuild/lwcgl-v2.9.3
+      - name: Apply mechanical migration
+        run: python3 tools/lwcgl_migrate.py
+      - name: Commit generated source migration
+        run: |
+          set -euo pipefail
+          git config user.name "xt9y"
+          git config user.email "felix@xt9y.de"
+          git diff --check
+          git add Engine/text.c Engine/level.c Engine/render.c Engine/editor.c
+          git diff --cached --exit-code && { echo 'migration produced no diff' >&2; exit 1; } || true
+          git commit -m "refactor: migrate renderer modules to lwcgl"
+          git push origin HEAD:rebuild/lwcgl-v2.9.3
