@@ -24,7 +24,7 @@ sudo make install
 
 The default install provides headers under `/usr/local/include/lwcgl-2.9.3` and the library under `/usr/local/lib`.
 
-On Linux, lwcgl itself requires the normal OpenGL/GLFW development packages. BGE does not include or use GLFW/GLAD directly.
+On Linux, lwcgl itself requires the normal OpenGL/GLFW development packages. BGE does not include or use GLFW/GLAD directly; lwcgl is the sole platform boundary.
 
 #### C build system
 
