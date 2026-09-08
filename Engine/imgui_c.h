@@ -3,15 +3,11 @@
 
 #include "util/types.h"
 
-typedef struct GLFWwindow GLFWwindow;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// --- Lifecycle -----------------------------------------------------------
-
-void imgui_init(GLFWwindow* window);
+bool imgui_init(void);
 void imgui_newframe(void);
 void imgui_render(void);
 void imgui_shutdown(void);
@@ -19,19 +15,14 @@ void imgui_shutdown(void);
 bool imgui_want_capture_mouse(void);
 bool imgui_want_capture_keyboard(void);
 bool imgui_is_any_window_hovered(void);
-
 void imgui_set_mouse_enabled(bool enabled);
 
-// --- Windows -------------------------------------------------------------
-
-// Condition flags (ImGuiCond_)
 #define IMGUI_COND_NONE            0
 #define IMGUI_COND_ALWAYS          (1 << 0)
 #define IMGUI_COND_ONCE            (1 << 1)
 #define IMGUI_COND_FIRST_USE_EVER  (1 << 2)
 #define IMGUI_COND_APPEARING       (1 << 3)
 
-// Window flags (ImGuiWindowFlags_)
 #define IMGUI_WINDOW_NONE                  0
 #define IMGUI_WINDOW_NO_TITLE_BAR          (1 << 0)
 #define IMGUI_WINDOW_NO_RESIZE             (1 << 1)
@@ -49,13 +40,10 @@ void imgui_set_mouse_enabled(bool enabled);
 
 bool imgui_begin(const char* title, bool* open, i32 window_flags);
 void imgui_end(void);
-
 void imgui_set_next_window_pos(f32 x, f32 y, i32 cond);
 void imgui_set_next_window_size(f32 w, f32 h, i32 cond);
 void imgui_set_next_window_bg_alpha(f32 alpha);
 void imgui_set_next_window_collapsed(bool collapsed, i32 cond);
-
-// --- Layout --------------------------------------------------------------
 
 void imgui_text(const char* fmt, ...);
 void imgui_same_line(void);
@@ -71,8 +59,6 @@ void imgui_push_item_width(f32 width);
 void imgui_pop_item_width(void);
 void imgui_align_text_to_frame_padding(void);
 
-// --- Widgets -------------------------------------------------------------
-
 bool imgui_button(const char* label);
 bool imgui_checkbox(const char* label, bool* v);
 bool imgui_slider_float(const char* label, f32* v, f32 v_min, f32 v_max);
@@ -86,17 +72,10 @@ bool imgui_selectable(const char* label, bool selected);
 bool imgui_collapsing_header(const char* label);
 bool imgui_radio(const char* label, i32* v, i32 v_button);
 
-// --- Child windows -------------------------------------------------------
-
 bool imgui_begin_child(const char* str_id, f32 width, f32 height, bool border);
 void imgui_end_child(void);
-
-// --- Images --------------------------------------------------------------
-
 void imgui_image(u32 texture_id, f32 width, f32 height);
 bool imgui_image_button(const char* str_id, u32 texture_id, f32 width, f32 height);
-
-// --- Interaction ---------------------------------------------------------
 
 bool imgui_is_item_clicked(i32 mouse_button);
 bool imgui_is_item_hovered(void);
@@ -104,20 +83,13 @@ bool imgui_is_window_hovered(void);
 bool imgui_is_any_item_hovered(void);
 void imgui_set_tooltip(const char* fmt, ...);
 
-// --- Popups --------------------------------------------------------------
-
 void imgui_open_popup(const char* str_id);
 bool imgui_begin_popup(const char* str_id);
 void imgui_end_popup(void);
 void imgui_close_current_popup(void);
 
-// --- ID scopes -----------------------------------------------------------
-
 void imgui_push_id_int(i32 id);
 void imgui_pop_id(void);
-
-// --- Misc ----------------------------------------------------------------
-
 f32 imgui_get_font_size(void);
 f32 imgui_calc_text_width(const char* text);
 
@@ -125,4 +97,4 @@ f32 imgui_calc_text_width(const char* text);
 }
 #endif
 
-#endif // IMGUI_C_H
+#endif
