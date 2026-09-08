@@ -56,6 +56,11 @@ jobs:
           set -euo pipefail
           grep -q '/usr/local/include/lwcgl-2.9.3' build.c
           grep -q -- '-llwcgl' build.c
+          test ! -e Vendor/glfw
+          test ! -e Vendor/glad
+          test ! -e Vendor/imgui/imgui_impl_glfw.cpp
+          test ! -e Vendor/imgui/imgui_impl_glfw.h
+          test ! -e Engine/CMakeLists.txt
           if grep -E -n 'git clone|curl|wget' build.c; then
             echo 'build.c must not download dependencies'
             exit 1
