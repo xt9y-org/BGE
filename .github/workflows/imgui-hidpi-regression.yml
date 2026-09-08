@@ -1,0 +1,48 @@
+name: ImGui HiDPI Regression
+
+'on':
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/imgui-hidpi-scale
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install graphics dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git pkg-config \
+            libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libx11-dev libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev libxext-dev
+
+      - name: Install lwcgl v2.9.3
+        run: |
+          git clone --depth 1 --branch v2.9.3 https://github.com/xt9y/lwcgl.git /tmp/lwcgl
+          make -C /tmp/lwcgl -j2 all
+          sudo make -C /tmp/lwcgl install
+          sudo ldconfig
+
+      - name: Test ImGui framebuffer scale contract
+        run: |
+          cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
+            -DBGE_INPUT_TEST -I. \
+            -c Engine/input.c -o /tmp/bge-input.o
+          c++ -std=c++20 -Wall -Wextra -Wpedantic -Werror \
+            -I. -IVendor/imgui -I/usr/local/include/lwcgl-2.9.3 \
+            tests/imgui_framebuffer_scale.cpp \
+            Engine/imgui_impl_lwcgl.cpp \
+            Vendor/imgui/imgui.cpp Vendor/imgui/imgui_draw.cpp \
+            Vendor/imgui/imgui_tables.cpp Vendor/imgui/imgui_widgets.cpp \
+            /tmp/bge-input.o \
+            -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl \
+            -o /tmp/bge-imgui-scale
+          /tmp/bge-imgui-scale
