@@ -1,6 +1,6 @@
 from pathlib import Path
 
-# One-shot guarded migration for the ImGui C/C++ frame boundary.
+# One-shot guarded migration for the ImGui C/C++ frame boundary; rerun after staging fix.
 header = Path("Engine/imgui_c.h")
 text = header.read_text()
 old = "void imgui_newframe(void);\n"
