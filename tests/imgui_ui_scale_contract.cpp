@@ -12,15 +12,15 @@ static bool nearly_equal(float a, float b)
 
 int main()
 {
-    if (!nearly_equal(bge_imgui_scale_size(10.0f), 30.0f)) {
-        std::fprintf(stderr, "expected explicit ImGui size 10 -> 30\n");
+    if (!nearly_equal(bge_imgui_scale_size(10.0f), 15.0f)) {
+        std::fprintf(stderr, "expected explicit ImGui size 10 -> 15\n");
         return 1;
     }
     if (!nearly_equal(bge_imgui_scale_size(0.0f), 0.0f)) {
         std::fprintf(stderr, "expected zero size to remain zero\n");
         return 1;
     }
-    if (!nearly_equal(bge_imgui_scale_size(-25.0f), -75.0f)) {
+    if (!nearly_equal(bge_imgui_scale_size(-25.0f), -37.5f)) {
         std::fprintf(stderr, "expected negative ImGui size semantics to scale\n");
         return 1;
     }

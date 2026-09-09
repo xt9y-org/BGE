@@ -25,14 +25,14 @@ int main()
     const ImGuiStyle& style = ImGui::GetStyle();
     bool ok = true;
 
-    if (!nearly_equal(style.WindowPadding.x, before.WindowPadding.x * 3.0f) ||
-        !nearly_equal(style.WindowPadding.y, before.WindowPadding.y * 3.0f) ||
-        !nearly_equal(style.FramePadding.x, before.FramePadding.x * 3.0f) ||
-        !nearly_equal(style.FramePadding.y, before.FramePadding.y * 3.0f) ||
-        !nearly_equal(style.ItemSpacing.x, before.ItemSpacing.x * 3.0f) ||
-        !nearly_equal(style.ItemSpacing.y, before.ItemSpacing.y * 3.0f) ||
-        !nearly_equal(style.FontScaleDpi, 3.0f)) {
-        std::fprintf(stderr, "expected ImGui style/font scale to be 3x\n");
+    if (!nearly_equal(style.WindowPadding.x, before.WindowPadding.x * 1.5f) ||
+        !nearly_equal(style.WindowPadding.y, before.WindowPadding.y * 1.5f) ||
+        !nearly_equal(style.FramePadding.x, before.FramePadding.x * 1.5f) ||
+        !nearly_equal(style.FramePadding.y, before.FramePadding.y * 1.5f) ||
+        !nearly_equal(style.ItemSpacing.x, before.ItemSpacing.x * 1.5f) ||
+        !nearly_equal(style.ItemSpacing.y, before.ItemSpacing.y * 1.5f) ||
+        !nearly_equal(style.FontScaleDpi, 1.5f)) {
+        std::fprintf(stderr, "expected ImGui style/font scale to be 1.5x\n");
         ok = false;
     }
 
