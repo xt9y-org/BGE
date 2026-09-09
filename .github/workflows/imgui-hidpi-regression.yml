@@ -1,4 +1,4 @@
-name: ImGui HiDPI Regression
+name: ImGui Scale Regression
 
 'on':
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
           sudo make -C /tmp/lwcgl install
           sudo ldconfig
 
-      - name: Test ImGui framebuffer scale contract
+      - name: Test ImGui framebuffer and style scale contract
         run: |
           cc -std=c11 -Wall -Wextra -Wpedantic -Werror \
             -DBGE_INPUT_TEST -I. \
@@ -47,3 +47,17 @@ jobs:
             -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl \
             -o /tmp/bge-imgui-scale
           /tmp/bge-imgui-scale
+
+      - name: Test explicit BGE ImGui size scaling
+        run: |
+          c++ -std=c++20 -Wall -Wextra -Wpedantic -Werror \
+            -I. -IEngine -IVendor/imgui -I/usr/local/include/lwcgl-2.9.3 \
+            tests/imgui_ui_scale_contract.cpp \
+            Engine/imgui_c.cpp Engine/imgui_impl_lwcgl.cpp \
+            Vendor/imgui/imgui.cpp Vendor/imgui/imgui_draw.cpp \
+            Vendor/imgui/imgui_tables.cpp Vendor/imgui/imgui_widgets.cpp \
+            Vendor/imgui/imgui_impl_opengl3.cpp \
+            /tmp/bge-input.o \
+            -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl -lGL \
+            -o /tmp/bge-imgui-ui-scale
+          /tmp/bge-imgui-ui-scale
