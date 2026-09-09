@@ -17,6 +17,11 @@ bool ImGui_ImplLwcgl_Init(void)
     if (g_initialized) return true;
     ImGuiIO& io = ImGui::GetIO();
     io.BackendPlatformName = "imgui_impl_lwcgl";
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(BGE_IMGUI_UI_SCALE);
+    style.FontScaleDpi = BGE_IMGUI_UI_SCALE;
+
     g_initialized = true;
     return true;
 }
