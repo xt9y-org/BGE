@@ -10,6 +10,11 @@
 
 extern "C" {
 
+f32 bge_imgui_scale_size(f32 value)
+{
+    return value * BGE_IMGUI_UI_SCALE;
+}
+
 bool imgui_init(void)
 {
     IMGUI_CHECKVERSION();
@@ -95,7 +100,10 @@ bool imgui_begin(const char* title, bool* open, i32 window_flags)
 
 void imgui_end(void) { ImGui::End(); }
 void imgui_set_next_window_pos(f32 x, f32 y, i32 cond) { ImGui::SetNextWindowPos(ImVec2(x, y), (ImGuiCond)cond); }
-void imgui_set_next_window_size(f32 w, f32 h, i32 cond) { ImGui::SetNextWindowSize(ImVec2(w, h), (ImGuiCond)cond); }
+void imgui_set_next_window_size(f32 w, f32 h, i32 cond)
+{
+    ImGui::SetNextWindowSize(ImVec2(bge_imgui_scale_size(w), bge_imgui_scale_size(h)), (ImGuiCond)cond);
+}
 void imgui_set_next_window_bg_alpha(f32 alpha) { ImGui::SetNextWindowBgAlpha(alpha); }
 void imgui_set_next_window_collapsed(bool collapsed, i32 cond) { ImGui::SetNextWindowCollapsed(collapsed, (ImGuiCond)cond); }
 
@@ -110,7 +118,7 @@ void imgui_text(const char* fmt, ...)
 }
 
 void imgui_same_line(void) { ImGui::SameLine(); }
-void imgui_same_line_offset(f32 x) { ImGui::SameLine(x); }
+void imgui_same_line_offset(f32 x) { ImGui::SameLine(bge_imgui_scale_size(x)); }
 void imgui_separator(void) { ImGui::Separator(); }
 void imgui_spacing(void) { ImGui::Spacing(); }
 void imgui_new_line(void) { ImGui::NewLine(); }
@@ -118,7 +126,7 @@ void imgui_indent(void) { ImGui::Indent(); }
 void imgui_unindent(void) { ImGui::Unindent(); }
 void imgui_begin_disabled(bool disabled) { ImGui::BeginDisabled(disabled); }
 void imgui_end_disabled(void) { ImGui::EndDisabled(); }
-void imgui_push_item_width(f32 width) { ImGui::PushItemWidth(width); }
+void imgui_push_item_width(f32 width) { ImGui::PushItemWidth(bge_imgui_scale_size(width)); }
 void imgui_pop_item_width(void) { ImGui::PopItemWidth(); }
 void imgui_align_text_to_frame_padding(void) { ImGui::AlignTextToFramePadding(); }
 
@@ -138,18 +146,23 @@ bool imgui_radio(const char* label, i32* v, i32 v_button) { return ImGui::RadioB
 bool imgui_begin_child(const char* str_id, f32 width, f32 height, bool border)
 {
     const ImGuiChildFlags flags = border ? ImGuiChildFlags_Borders : ImGuiChildFlags_None;
-    return ImGui::BeginChild(str_id, ImVec2(width, height), flags);
+    return ImGui::BeginChild(str_id,
+                             ImVec2(bge_imgui_scale_size(width), bge_imgui_scale_size(height)),
+                             flags);
 }
 void imgui_end_child(void) { ImGui::EndChild(); }
 
 void imgui_image(u32 texture_id, f32 width, f32 height)
 {
-    ImGui::Image(ImTextureRef((ImTextureID)(uintptr_t)texture_id), ImVec2(width, height));
+    ImGui::Image(ImTextureRef((ImTextureID)(uintptr_t)texture_id),
+                 ImVec2(bge_imgui_scale_size(width), bge_imgui_scale_size(height)));
 }
 
 bool imgui_image_button(const char* str_id, u32 texture_id, f32 width, f32 height)
 {
-    return ImGui::ImageButton(str_id, ImTextureRef((ImTextureID)(uintptr_t)texture_id), ImVec2(width, height));
+    return ImGui::ImageButton(str_id,
+                              ImTextureRef((ImTextureID)(uintptr_t)texture_id),
+                              ImVec2(bge_imgui_scale_size(width), bge_imgui_scale_size(height)));
 }
 
 bool imgui_is_item_clicked(i32 mouse_button) { return ImGui::IsItemClicked((ImGuiMouseButton)mouse_button); }
