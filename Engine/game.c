@@ -284,8 +284,6 @@ void game_render(void)
     glViewport(0, 0, fbw, fbh);
     glDisable(GL_DEPTH_TEST);
 
-    imgui_newframe(state.dt, state.fb->ww, state.fb->wh, state.fb->w, state.fb->h);
-
     text_begin();
     text_draw((vec2s){(f32)state.fb->ww * 0.5f - 5.0f, (f32)state.fb->wh * 0.5f - 10.0f}, "+");
     text_flush(state.fb->ww, state.fb->wh);

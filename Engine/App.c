@@ -437,6 +437,7 @@ static bool app_frame(void)
     Display.processMessages();
     update_framebuffer_metrics();
     input_begin_frame();
+    imgui_newframe(state.dt, state.fb->ww, state.fb->wh, state.fb->w, state.fb->h);
     game_handle_input();
     game_update();
     game_render();

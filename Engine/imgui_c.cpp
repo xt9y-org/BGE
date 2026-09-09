@@ -15,6 +15,13 @@ f32 bge_imgui_scale_size(f32 value)
     return value * BGE_IMGUI_UI_SCALE;
 }
 
+bool bge_imgui_scene_mouse_blocked(bool cursor_locked,
+                                   bool want_capture_mouse,
+                                   bool any_window_hovered)
+{
+    return !cursor_locked && (want_capture_mouse || any_window_hovered);
+}
+
 bool imgui_init(void)
 {
     IMGUI_CHECKVERSION();
@@ -72,7 +79,10 @@ void imgui_shutdown(void)
 
 bool imgui_want_capture_mouse(void)
 {
-    return ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse;
+    if (!ImGui::GetCurrentContext()) return false;
+    return bge_imgui_scene_mouse_blocked(false,
+                                         ImGui::GetIO().WantCaptureMouse,
+                                         ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow));
 }
 
 bool imgui_want_capture_keyboard(void)

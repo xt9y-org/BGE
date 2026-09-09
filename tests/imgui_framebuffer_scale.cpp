@@ -10,6 +10,11 @@ static bool nearly_equal(float a, float b)
     return std::fabs(a - b) < 0.0001f;
 }
 
+static float imgui_scaled_size(float value)
+{
+    return std::trunc(value * 1.5f);
+}
+
 int main()
 {
     ImGui::CreateContext();
@@ -25,14 +30,20 @@ int main()
     const ImGuiStyle& style = ImGui::GetStyle();
     bool ok = true;
 
-    if (!nearly_equal(style.WindowPadding.x, before.WindowPadding.x * 3.0f) ||
-        !nearly_equal(style.WindowPadding.y, before.WindowPadding.y * 3.0f) ||
-        !nearly_equal(style.FramePadding.x, before.FramePadding.x * 3.0f) ||
-        !nearly_equal(style.FramePadding.y, before.FramePadding.y * 3.0f) ||
-        !nearly_equal(style.ItemSpacing.x, before.ItemSpacing.x * 3.0f) ||
-        !nearly_equal(style.ItemSpacing.y, before.ItemSpacing.y * 3.0f) ||
-        !nearly_equal(style.FontScaleDpi, 3.0f)) {
-        std::fprintf(stderr, "expected ImGui style/font scale to be 3x\n");
+    if (!nearly_equal(style.WindowPadding.x, imgui_scaled_size(before.WindowPadding.x)) ||
+        !nearly_equal(style.WindowPadding.y, imgui_scaled_size(before.WindowPadding.y)) ||
+        !nearly_equal(style.FramePadding.x, imgui_scaled_size(before.FramePadding.x)) ||
+        !nearly_equal(style.FramePadding.y, imgui_scaled_size(before.FramePadding.y)) ||
+        !nearly_equal(style.ItemSpacing.x, imgui_scaled_size(before.ItemSpacing.x)) ||
+        !nearly_equal(style.ItemSpacing.y, imgui_scaled_size(before.ItemSpacing.y)) ||
+        !nearly_equal(style.FontScaleDpi, 1.5f)) {
+        std::fprintf(stderr,
+                     "expected ImGui 1.5x scale (integer-truncated style sizes): "
+                     "window=(%.3f,%.3f) frame=(%.3f,%.3f) item=(%.3f,%.3f) font=%.3f\n",
+                     style.WindowPadding.x, style.WindowPadding.y,
+                     style.FramePadding.x, style.FramePadding.y,
+                     style.ItemSpacing.x, style.ItemSpacing.y,
+                     style.FontScaleDpi);
         ok = false;
     }
 

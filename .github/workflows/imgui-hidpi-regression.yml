@@ -61,3 +61,22 @@ jobs:
             -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl -lGL \
             -o /tmp/bge-imgui-ui-scale
           /tmp/bge-imgui-ui-scale
+
+      - name: Test ImGui scene mouse capture policy
+        if: always()
+        run: |
+          c++ -std=c++20 -Wall -Wextra -Wpedantic -Werror \
+            -I. -IEngine -IVendor/imgui -I/usr/local/include/lwcgl-2.9.3 \
+            tests/imgui_mouse_capture_contract.cpp \
+            Engine/imgui_c.cpp Engine/imgui_impl_lwcgl.cpp \
+            Vendor/imgui/imgui.cpp Vendor/imgui/imgui_draw.cpp \
+            Vendor/imgui/imgui_tables.cpp Vendor/imgui/imgui_widgets.cpp \
+            Vendor/imgui/imgui_impl_opengl3.cpp \
+            /tmp/bge-input.o \
+            -L/usr/local/lib -Wl,-rpath,/usr/local/lib -llwcgl -lGL \
+            -o /tmp/bge-imgui-mouse-capture
+          /tmp/bge-imgui-mouse-capture
+
+      - name: Test ImGui frame ordering
+        if: always()
+        run: python3 tests/imgui_frame_order_contract.py
