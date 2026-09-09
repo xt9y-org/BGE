@@ -12,6 +12,8 @@ void imgui_newframe(f32 dt, i32 window_w, i32 window_h, i32 framebuffer_w, i32 f
 void imgui_render(void);
 void imgui_shutdown(void);
 
+f32 bge_imgui_scale_size(f32 value);
+
 bool imgui_want_capture_mouse(void);
 bool imgui_want_capture_keyboard(void);
 bool imgui_is_any_window_hovered(void);
