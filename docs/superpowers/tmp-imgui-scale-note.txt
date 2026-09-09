@@ -1,1 +1,0 @@
-Temporary trigger file for the 3x ImGui scaling PR. Delete before merge.
